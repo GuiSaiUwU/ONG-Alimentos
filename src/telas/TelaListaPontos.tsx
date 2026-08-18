@@ -1,5 +1,5 @@
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { pontosMock } from "../dados/pontosMock";
 import { Ponto, RootStackParamList } from "../types";
 
@@ -17,15 +17,19 @@ function PontoItem({ ponto, onPress }: { ponto: Ponto; onPress: () => void }) {
 export default function TelaListaPontos({ navigation }: Props) {
   return (
     <View style={styles.container}>
-      {pontosMock.map((ponto) => (
-        <PontoItem
-          key={ponto.id}
-          ponto={ponto}
-          onPress={() =>
-            navigation.navigate("TelaDetalhePonto", { pontoId: ponto.id })
-          }
-        />
-      ))}
+      <FlatList
+        data={pontosMock}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({item}) => 
+          <PontoItem
+            key={item.id}
+            ponto={item}
+            onPress={() =>
+              navigation.navigate("TelaDetalhePonto", { pontoId: item.id })
+            }
+          />
+        }
+      />
     </View>
   );
 }
@@ -38,9 +42,10 @@ const styles = StyleSheet.create({
   },
   item: {
     borderWidth: 1,
-    borderColor: "#ddd",
+    borderColor: "#827d7d",
     borderRadius: 8,
     padding: 12,
+    marginBottom: 8,
     backgroundColor: "#fff",
   },
   nome: {
