@@ -1,7 +1,13 @@
 export enum TIPOS_DOACAO {
     ALIMENTOS = "Alimentos",
-    ROUPAS = "Roupas"
+    ROUPAS = "Roupas",
+    LIVROS = "Livros",
+    BRINQUEDOS = "Brinquedos",
+    CALCADOS = "Calçados",
+    HIGIENE = "Higiene",
+    RACOES = "Rações"
 }
+
 
 export enum DIAS_SEMANA {
     SABADO = "Sábado",
@@ -21,6 +27,7 @@ export type Ponto = {
     diasQueAtende: DIAS_SEMANA[];
     tiposDeDoacao: TIPOS_DOACAO[];
 };
+
 
 export type RootStackParamList = {
     TelaListaPontos: undefined;
