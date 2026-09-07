@@ -2,6 +2,7 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { pontosMock } from "../dados/pontosMock";
 import { Ponto, RootStackParamList } from "../types";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 type Props = NativeStackScreenProps<RootStackParamList, "TelaListaPontos">;
 
@@ -16,28 +17,35 @@ function PontoItem({ ponto, onPress }: { ponto: Ponto; onPress: () => void }) {
 
 export default function TelaListaPontos({ navigation }: Props) {
   return (
-    <View style={styles.container}>
-      <FlatList
-        data={pontosMock}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({item}) => 
-          <PontoItem
-            key={item.id}
-            ponto={item}
-            onPress={() =>
-              navigation.navigate("TelaDetalhePonto", { pontoId: item.id })
-            }
-          />
-        }
-      />
-    </View>
+    <SafeAreaView style={styles.safeareaview}>
+      <View style={styles.container}>{/* Cadastro de item de doação */}</View>
+      <View style={styles.container}>
+        <FlatList
+          data={pontosMock}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item }) => (
+            <PontoItem
+              key={item.id}
+              ponto={item}
+              onPress={() =>
+                navigation.navigate("TelaDetalhePonto", { pontoId: item.id })
+              }
+            />
+          )}
+        />
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safeareaview: {
     flex: 1,
+    backgroundColor: '#676767'
+  },
+  container: {
     padding: 16,
+    backgroundColor: "#fff",
     gap: 12,
   },
   item: {

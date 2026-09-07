@@ -2,17 +2,24 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { StyleSheet, Text, View } from "react-native";
 import { pontosMock } from "../dados/pontosMock";
 import { Ponto, RootStackParamList } from "../types";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 type Props = NativeStackScreenProps<RootStackParamList, "TelaDetalhePonto">;
 
 function DetalhePonto({ ponto }: { ponto: Ponto }) {
   return (
-    <View style={styles.container}>
-      <Text style={styles.nome}>{ponto.nome}</Text>
-      <Text style={styles.endereco}>{ponto.endereco}</Text>
-      <Text style={styles.linha}>Dias que atende: {ponto.diasQueAtende.join(", ")}</Text>
-      <Text style={styles.linha}>Tipos de doação: {ponto.tiposDeDoacao.join(", ")}</Text>
-    </View>
+    <SafeAreaView style={styles.safeareaview}>
+      <View style={styles.container}>
+        <Text style={styles.nome}>{ponto.nome}</Text>
+        <Text style={styles.endereco}>{ponto.endereco}</Text>
+        <Text style={styles.linha}>
+          Dias que atende: {ponto.diasQueAtende.join(", ")}
+        </Text>
+        <Text style={styles.linha}>
+          Tipos de doação: {ponto.tiposDeDoacao.join(", ")}
+        </Text>
+      </View>
+    </SafeAreaView>
   );
 }
 
@@ -32,9 +39,14 @@ export default function TelaDetalhePonto({ route }: Props) {
 }
 
 const styles = StyleSheet.create({
+  safeareaview: {
+    flex: 1,
+    backgroundColor: '#676767'
+  },
   container: {
     flex: 1,
     padding: 20,
+    backgroundColor: "#fff",
   },
   nome: {
     fontSize: 22,
