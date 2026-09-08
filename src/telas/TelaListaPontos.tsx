@@ -12,7 +12,7 @@ import {
 import { pontosMock } from "../dados/pontosMock";
 import { Ponto, RootStackParamList, TIPOS_DOACAO } from "../types";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Picker } from "@react-native-picker/picker";
 
 type Props = NativeStackScreenProps<RootStackParamList, "TelaListaPontos">;
@@ -30,11 +30,14 @@ export default function TelaListaPontos({ navigation }: Props) {
   const [nome, setNome] = useState("");
   const [quantidade, setQuantidade] = useState("");
   const [pontoDestino, setPontoDestino] = useState<number | null>(null);
-  const [tipo, setTipo] = useState("");
+  const [tipo, setTipo] = useState<TIPOS_DOACAO>(TIPOS_DOACAO.ALIMENTOS);
   const [erro, setErro] = useState("");
+  const [sucesso, setSucesso] = useState("");
   const insets = useSafeAreaInsets();
 
   function validarESalvar() {
+    setSucesso("");
+
     if (!nome || !quantidade || !tipo) {
       setErro("Preencha todos os campos");
       return;
@@ -44,9 +47,33 @@ export default function TelaListaPontos({ navigation }: Props) {
       setErro("Quantidade deve ser um número");
       return;
     }
+    
+    if (pontoDestino === null || pontoDestino === -1) {
+      setErro("Selecione um ponto de doação válido");
+      return;
+    }
 
     setErro("");
+    setSucesso(`${nome} cadastrado com sucesso!`);
+    // TODO: Salvar a doação uwu
+
+    setPontoDestino(null);
+    setNome("");
+    setQuantidade("");
+    setTipo(TIPOS_DOACAO.ALIMENTOS);
   }
+
+  useEffect(() => {
+    const pontosValidos = pontosMock.filter((ponto) =>
+      ponto.tiposDeDoacao.includes(tipo)
+    );
+    
+    if (pontosValidos.length > 0) {
+      setPontoDestino(pontosValidos[0].id);
+    } else {
+      setPontoDestino(-1);
+    }
+  }, [tipo]);
 
   return (
     <FlatList
@@ -87,19 +114,30 @@ export default function TelaListaPontos({ navigation }: Props) {
           />
           <Text>Selecione o tipo de doação:</Text>
           <View style={styles.pickerContainer}>
-            <Picker
-              selectedValue={tipo}
-              onValueChange={setTipo}
-            >
+            <Picker selectedValue={tipo} onValueChange={setTipo}>
               {Object.values(TIPOS_DOACAO).map((tipo) => (
                 <Picker.Item key={tipo} label={tipo} value={tipo} />
               ))}
             </Picker>
           </View>
-          <Text style={styles.erro}>{erro}</Text>
+          <Text>Selecione o ponto de doação:</Text>
+          <View style={styles.pickerContainer}>
+            <Picker
+              selectedValue={pontoDestino}
+              onValueChange={setPontoDestino}
+            >
+              {pontosMock.filter((ponto) => ponto.tiposDeDoacao.includes(tipo)).map((ponto) => (
+                <Picker.Item key={ponto.id} label={ponto.nome} value={ponto.id} />
+              ))}
+            </Picker>
+          </View>
           <Pressable style={styles.button} onPress={validarESalvar}>
             <Text style={styles.buttonText}>Cadastrar</Text>
           </Pressable>
+          <View>
+            {sucesso ? <Text style={styles.sucesso}>{sucesso}</Text> : null}
+            {erro ? <Text style={styles.erro}>{erro}</Text> : null}
+          </View>
         </View>
       }
     />
@@ -108,7 +146,7 @@ export default function TelaListaPontos({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   button: {
-    marginTop: 8,
+    marginTop: 4,
     borderRadius: 8,
     backgroundColor: "#5c9dda",
     padding: 12,
@@ -117,7 +155,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontWeight: "600",
-    fontSize: 14
+    fontSize: 14,
   },
   flatList: {
     flex: 1,
@@ -170,6 +208,11 @@ const styles = StyleSheet.create({
   },
   erro: {
     color: "#e53e3e",
+    fontSize: 14,
+    alignSelf: "center",
+  },
+  sucesso: {
+    color: "#38a169",
     fontSize: 14,
     alignSelf: "center",
   },
