@@ -9,6 +9,14 @@ export enum TIPOS_DOACAO {
 }
 
 
+export type ItemDoacao = {
+    nome: string;
+    tipo: TIPOS_DOACAO;
+    quantidade: number;
+    pontoDestino: Ponto;
+}
+
+
 export enum DIAS_SEMANA {
     SABADO = "Sábado",
     DOMINGO = "Domingo",
