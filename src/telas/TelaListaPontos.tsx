@@ -123,7 +123,7 @@ export default function TelaListaPontos({ navigation }: Props) {
           <Text>Selecione o ponto de doação:</Text>
           <View style={styles.pickerContainer}>
             <Picker
-              selectedValue={pontoDestino}
+              selectedValue={pontoDestino ?? -1}
               onValueChange={setPontoDestino}
             >
               {pontosMock.filter((ponto) => ponto.tiposDeDoacao.includes(tipo)).map((ponto) => (
