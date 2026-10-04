@@ -10,10 +10,14 @@ import {
   View,
 } from "react-native";
 import { pontosMock } from "../dados/pontosMock";
-import { Ponto, RootStackParamList, TIPOS_DOACAO } from "../types";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { ItemDoacao, Ponto, RootStackParamList, TIPOS_DOACAO } from "../types";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { useEffect, useState } from "react";
 import { Picker } from "@react-native-picker/picker";
+import { salvarDoacao } from "../dados/doacoesStorage";
 
 type Props = NativeStackScreenProps<RootStackParamList, "TelaListaPontos">;
 
@@ -35,7 +39,7 @@ export default function TelaListaPontos({ navigation }: Props) {
   const [sucesso, setSucesso] = useState("");
   const insets = useSafeAreaInsets();
 
-  function validarESalvar() {
+  async function validarESalvar() {
     setSucesso("");
 
     if (!nome || !quantidade || !tipo) {
@@ -53,19 +57,33 @@ export default function TelaListaPontos({ navigation }: Props) {
       return;
     }
 
-    setErro("");
-    setSucesso(`${nome} cadastrado com sucesso!`);
-    // TODO: Salvar a doação uwu
+    const itemDoacao: ItemDoacao = {
+      id: -1,
+      criadoEm: 0 as unknown as Date, // valores que serão substituídos ao salvar
+      nome,
+      tipo,
+      quantidade: Number(quantidade),
+      pontoDestino: pontosMock.find((ponto) => ponto.id === pontoDestino)!,
+    };
 
-    setPontoDestino(null);
-    setNome("");
-    setQuantidade("");
-    setTipo(TIPOS_DOACAO.ALIMENTOS);
+    await salvarDoacao(itemDoacao)
+      .then(() => {
+        setErro("");
+        setSucesso(`${nome} cadastrado com sucesso!`);
+
+        setPontoDestino(null);
+        setNome("");
+        setQuantidade("");
+        setTipo(TIPOS_DOACAO.ALIMENTOS);
+      })
+      .catch((error) => {
+        setErro("Erro ao salvar a doação: " + error.message);
+      });
   }
 
   useEffect(() => {
     const pontosValidos = pontosMock.filter((ponto) =>
-      ponto.tiposDeDoacao.includes(tipo)
+      ponto.tiposDeDoacao.includes(tipo),
     );
 
     if (pontosValidos.length > 0) {
@@ -76,7 +94,7 @@ export default function TelaListaPontos({ navigation }: Props) {
   }, [tipo]);
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['bottom', 'left', 'right']}>
+    <SafeAreaView style={styles.safeArea} edges={["bottom", "left", "right"]}>
       <KeyboardAvoidingView
         style={styles.keyboardView}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -133,7 +151,11 @@ export default function TelaListaPontos({ navigation }: Props) {
                   {pontosMock
                     .filter((ponto) => ponto.tiposDeDoacao.includes(tipo))
                     .map((ponto) => (
-                      <Picker.Item key={ponto.id} label={ponto.nome} value={ponto.id} />
+                      <Picker.Item
+                        key={ponto.id}
+                        label={ponto.nome}
+                        value={ponto.id}
+                      />
                     ))}
                 </Picker>
               </View>
