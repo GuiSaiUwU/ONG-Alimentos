@@ -10,6 +10,8 @@ export enum TIPOS_DOACAO {
 
 
 export type ItemDoacao = {
+    id: number;
+    criadoEm: Date;
     nome: string;
     tipo: TIPOS_DOACAO;
     quantidade: number;
