@@ -4,7 +4,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  StyleSheet,
   Text,
   TextInput,
   View,
@@ -18,14 +17,15 @@ import {
 import { useEffect, useState } from "react";
 import { Picker } from "@react-native-picker/picker";
 import { salvarDoacao } from "../dados/doacoesStorage";
+import { styles } from "../utils/styling";
 
 type Props = NativeStackScreenProps<RootStackParamList, "TelaListaPontos">;
 
 function PontoItem({ ponto, onPress }: { ponto: Ponto; onPress: () => void }) {
   return (
-    <Pressable onPress={onPress} style={styles.item}>
-      <Text style={styles.nome}>{ponto.nome}</Text>
-      <Text style={styles.endereco}>{ponto.endereco}</Text>
+    <Pressable onPress={onPress} style={styles.pontoItem}>
+      <Text style={styles.pontoNome}>{ponto.nome}</Text>
+      <Text style={styles.pontoEndereco}>{ponto.endereco}</Text>
     </Pressable>
   );
 }
@@ -122,13 +122,13 @@ export default function TelaListaPontos({ navigation }: Props) {
             <View style={styles.container}>
               <Text style={styles.title}>Cadastro de item de doação</Text>
               <TextInput
-                style={styles.input}
+                style={styles.textInput}
                 placeholder="Nome"
                 value={nome}
                 onChangeText={setNome}
               />
               <TextInput
-                style={styles.input}
+                style={styles.textInput}
                 placeholder="Quantidade"
                 keyboardType="numeric"
                 value={quantidade}
@@ -159,12 +159,21 @@ export default function TelaListaPontos({ navigation }: Props) {
                     ))}
                 </Picker>
               </View>
+
               <Pressable style={styles.button} onPress={validarESalvar}>
                 <Text style={styles.buttonText}>Cadastrar</Text>
               </Pressable>
+
+              <Pressable
+                style={[styles.button, { backgroundColor: "#b4dd1e" }]}
+                onPress={() => navigation.navigate("MinhasDoacoes")}
+              >
+                <Text style={styles.buttonText}>Minhas Doações</Text>
+              </Pressable>
+
               <View>
-                {sucesso ? <Text style={styles.sucesso}>{sucesso}</Text> : null}
-                {erro ? <Text style={styles.erro}>{erro}</Text> : null}
+                {sucesso ? <Text style={styles.textSucesso}>{sucesso}</Text> : null}
+                {erro ? <Text style={styles.textErro}>{erro}</Text> : null}
               </View>
             </View>
           }
@@ -173,87 +182,3 @@ export default function TelaListaPontos({ navigation }: Props) {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: "#676767",
-  },
-  keyboardView: {
-    flex: 1,
-  },
-  button: {
-    marginTop: 4,
-    borderRadius: 8,
-    backgroundColor: "#5c9dda",
-    padding: 12,
-    minHeight: 44,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  buttonText: {
-    fontWeight: "600",
-    fontSize: 14,
-  },
-  flatList: {
-    flex: 1,
-    backgroundColor: "#676767",
-  },
-  pickerContainer: {
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-    borderRadius: 8,
-    overflow: "hidden",
-    backgroundColor: "#fff",
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-    backgroundColor: "#fff",
-    color: "#000000",
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 8,
-    minHeight: 44,
-  },
-  container: {
-    padding: 16,
-    backgroundColor: "#fff",
-    gap: 12,
-  },
-  listContainer: {
-    paddingHorizontal: 16,
-    backgroundColor: "#fff",
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-  item: {
-    borderWidth: 1,
-    borderColor: "#827d7d",
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 8,
-    backgroundColor: "#fff",
-    minHeight: 44,
-  },
-  nome: {
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  endereco: {
-    marginTop: 4,
-    color: "#444",
-  },
-  erro: {
-    color: "#e53e3e",
-    fontSize: 14,
-    alignSelf: "center",
-  },
-  sucesso: {
-    color: "#38a169",
-    fontSize: 14,
-    alignSelf: "center",
-  },
-});
