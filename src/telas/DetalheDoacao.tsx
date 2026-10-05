@@ -1,12 +1,16 @@
 import { SafeAreaView } from "react-native-safe-area-context";
 import { styles } from "../utils/styling";
 import { deletarDoacao, listarDoacoes } from "../dados/doacoesStorage";
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { ItemDoacao, RootStackParamList } from "../types";
 import { Alert, Pressable, Text, View } from "react-native";
 import { format } from "date-fns";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { NavigationProp, useNavigation } from "@react-navigation/native";
+import {
+  NavigationProp,
+  useFocusEffect,
+  useNavigation,
+} from "@react-navigation/native";
 
 type Props = NativeStackScreenProps<RootStackParamList, "TelaDetalheDoacao">;
 
@@ -29,7 +33,6 @@ function DetalheItemDoacao({ itemDoacao }: { itemDoacao: ItemDoacao }) {
 }
 
 function BotaoDeletar({ doacaoId }: { doacaoId: number }) {
-  // Passa o tipo genérico indicando que a tela 'MinhasDoacoes' existe
   const navigation = useNavigation<NavigationProp<any>>();
 
   return (
@@ -46,7 +49,7 @@ function BotaoDeletar({ doacaoId }: { doacaoId: number }) {
             onPress: async () => {
               try {
                 await deletarDoacao(doacaoId);
-                navigation.navigate("TelaMinhasDoacoes");
+                navigation.goBack();
               } catch (error) {
                 console.error("Erro ao deletar: ", error);
               }
@@ -60,27 +63,47 @@ function BotaoDeletar({ doacaoId }: { doacaoId: number }) {
   );
 }
 
+function BotaoEditar({ doacaoId }: { doacaoId: number }) {
+  const navigation = useNavigation<NavigationProp<any>>();
+
+  return (
+    <Pressable
+      style={styles.button}
+      onPress={() => navigation.navigate("TelaListaPontos", { doacaoId })}
+    >
+      <Text style={styles.buttonText}>Editar Doação</Text>
+    </Pressable>
+  );
+}
+
 export default function DetalheDoacao({ route }: Props) {
   const { doacaoId } = route.params;
   const [doacao, setDoacao] = useState<ItemDoacao | null>(null);
 
-  useEffect(() => {
-    listarDoacoes().then((doacoes) => {
-      const doacao = doacoes.find((item) => item.id === doacaoId);
-      if (!doacao) {
-        console.error("Doação não encontrada");
-      } else {
-        setDoacao(doacao);
-      }
-    });
-  }, [doacaoId]);
+  useFocusEffect(
+    useCallback(() => {
+      listarDoacoes()
+        .then((doacoes) => {
+          const doacaoEncontrada = doacoes.find((item) => item.id === doacaoId);
+          if (!doacaoEncontrada) {
+            console.error("Doação não encontrada");
+            return;
+          }
+          setDoacao(doacaoEncontrada);
+        })
+        .catch((error) => console.error("Erro ao carregar doação:", error));
+    }, [doacaoId]),
+  );
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView>
       {doacao ? (
         <>
-          <DetalheItemDoacao itemDoacao={doacao} />
-          <BotaoDeletar doacaoId={doacao.id} />
+          <View style={[styles.pickerContainer, { paddingBottom: 8 }]}>
+            <DetalheItemDoacao itemDoacao={doacao} />
+            <BotaoEditar doacaoId={doacao.id} />
+            <BotaoDeletar doacaoId={doacao.id} />
+          </View>
         </>
       ) : (
         <Text>Doação não encontrada</Text>

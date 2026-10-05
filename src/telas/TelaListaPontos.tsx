@@ -16,7 +16,11 @@ import {
 } from "react-native-safe-area-context";
 import { useEffect, useState } from "react";
 import { Picker } from "@react-native-picker/picker";
-import { salvarDoacao } from "../dados/doacoesStorage";
+import {
+  atualizarDoacao,
+  listarDoacoes,
+  salvarDoacao,
+} from "../dados/doacoesStorage";
 import { styles } from "../utils/styling";
 
 type Props = NativeStackScreenProps<RootStackParamList, "TelaListaPontos">;
@@ -30,14 +34,44 @@ function PontoItem({ ponto, onPress }: { ponto: Ponto; onPress: () => void }) {
   );
 }
 
-export default function TelaListaPontos({ navigation }: Props) {
+export default function TelaListaPontos({ navigation, route }: Props) {
+  const doacaoId = route.params?.doacaoId;
+  const editando = doacaoId !== undefined;
   const [nome, setNome] = useState("");
   const [quantidade, setQuantidade] = useState("");
   const [pontoDestino, setPontoDestino] = useState<number | null>(null);
   const [tipo, setTipo] = useState<TIPOS_DOACAO>(TIPOS_DOACAO.ALIMENTOS);
   const [erro, setErro] = useState("");
   const [sucesso, setSucesso] = useState("");
+  const [doacaoCarregada, setDoacaoCarregada] = useState(!editando);
   const insets = useSafeAreaInsets();
+
+  useEffect(() => {
+    navigation.setOptions({
+      title: editando ? "Editar doação" : "Pontos de coleta",
+    });
+  }, [editando, navigation]);
+
+  useEffect(() => {
+    if (doacaoId === undefined) {
+      return;
+    }
+
+    listarDoacoes()
+      .then((doacoes) => {
+        const doacao = doacoes.find((item) => item.id === doacaoId);
+        if (!doacao) {
+          setErro("Doação não encontrada");
+          return;
+        }
+        setNome(doacao.nome);
+        setQuantidade(doacao.quantidade.toString());
+        setTipo(doacao.tipo);
+        setPontoDestino(doacao.pontoDestino.id);
+        setDoacaoCarregada(true);
+      })
+      .catch((error) => setErro("Erro ao carregar a doação: " + error.message));
+  }, [doacaoId]);
 
   async function validarESalvar() {
     setSucesso("");
@@ -58,17 +92,23 @@ export default function TelaListaPontos({ navigation }: Props) {
     }
 
     const itemDoacao: ItemDoacao = {
-      id: -1,
-      criadoEm: 0 as unknown as Date, // valores que serão substituídos ao salvar
+      id: doacaoId ?? -1,
+      criadoEm: 0 as unknown as Date,
       nome,
       tipo,
       quantidade: Number(quantidade),
       pontoDestino: pontosMock.find((ponto) => ponto.id === pontoDestino)!,
     };
 
-    await salvarDoacao(itemDoacao)
+    const salvar = editando ? atualizarDoacao : salvarDoacao;
+
+    await salvar(itemDoacao)
       .then(() => {
         setErro("");
+        if (editando) {
+          navigation.goBack();
+          return;
+        }
         setSucesso(`${nome} cadastrado com sucesso!`);
 
         setPontoDestino(null);
@@ -82,16 +122,25 @@ export default function TelaListaPontos({ navigation }: Props) {
   }
 
   useEffect(() => {
+    if (editando && !doacaoCarregada) {
+      return;
+    }
+
     const pontosValidos = pontosMock.filter((ponto) =>
       ponto.tiposDeDoacao.includes(tipo),
     );
 
-    if (pontosValidos.length > 0) {
+    if (
+      pontosValidos.length > 0 &&
+      (!editando ||
+        pontoDestino === null ||
+        !pontosValidos.some((ponto) => ponto.id === pontoDestino))
+    ) {
       setPontoDestino(pontosValidos[0].id);
-    } else {
+    } else if (pontosValidos.length === 0) {
       setPontoDestino(-1);
     }
-  }, [tipo]);
+  }, [doacaoCarregada, doacaoId, editando, pontoDestino, tipo]);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["bottom", "left", "right"]}>
@@ -120,7 +169,11 @@ export default function TelaListaPontos({ navigation }: Props) {
           )}
           ListHeaderComponent={
             <View style={styles.container}>
-              <Text style={styles.title}>Cadastro de item de doação</Text>
+              <Text style={styles.title}>
+                {editando
+                  ? "Edição de item de doação"
+                  : "Cadastro de item de doação"}
+              </Text>
               <TextInput
                 style={styles.textInput}
                 placeholder="Nome"
@@ -161,18 +214,28 @@ export default function TelaListaPontos({ navigation }: Props) {
               </View>
 
               <Pressable style={styles.button} onPress={validarESalvar}>
-                <Text style={styles.buttonText}>Cadastrar</Text>
+                <Text style={styles.buttonText}>
+                  {editando ? "Salvar alterações" : "Cadastrar"}
+                </Text>
               </Pressable>
 
               <Pressable
                 style={[styles.button, { backgroundColor: "#b4dd1e" }]}
-                onPress={() => navigation.navigate("TelaMinhasDoacoes")}
+                onPress={() =>
+                  editando
+                    ? navigation.goBack()
+                    : navigation.navigate("TelaMinhasDoacoes")
+                }
               >
-                <Text style={styles.buttonText}>Minhas Doações</Text>
+                <Text style={styles.buttonText}>
+                  {editando ? "Cancelar" : "Minhas Doações"}
+                </Text>
               </Pressable>
 
               <View>
-                {sucesso ? <Text style={styles.textSucesso}>{sucesso}</Text> : null}
+                {sucesso ? (
+                  <Text style={styles.textSucesso}>{sucesso}</Text>
+                ) : null}
                 {erro ? <Text style={styles.textErro}>{erro}</Text> : null}
               </View>
             </View>

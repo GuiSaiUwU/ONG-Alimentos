@@ -36,3 +36,20 @@ export function deletarDoacao(doacaoId: number): Promise<void> {
     );
   });
 }
+
+export function atualizarDoacao(doacao: ItemDoacao): Promise<void> {
+  return listarDoacoes().then((doacoes) => {
+    if (!doacoes.some((item) => item.id === doacao.id)) {
+      throw new Error("Doação não encontrada");
+    }
+
+    const doacaoAtualizada = doacoes.map((item) =>
+      item.id === doacao.id ? { ...doacao, criadoEm: item.criadoEm } : item,
+    );
+
+    return AsyncStorage.setItem(
+      CHAVE_DOACOES,
+      JSON.stringify(doacaoAtualizada),
+    );
+  });
+}
