@@ -166,7 +166,7 @@ export default function TelaListaPontos({ navigation }: Props) {
 
               <Pressable
                 style={[styles.button, { backgroundColor: "#b4dd1e" }]}
-                onPress={() => navigation.navigate("MinhasDoacoes")}
+                onPress={() => navigation.navigate("TelaMinhasDoacoes")}
               >
                 <Text style={styles.buttonText}>Minhas Doações</Text>
               </Pressable>

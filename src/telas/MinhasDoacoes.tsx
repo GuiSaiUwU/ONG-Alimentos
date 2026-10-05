@@ -1,19 +1,22 @@
 import { memo, useState } from "react";
 import { ItemDoacao } from "../types";
 import { listarDoacoes } from "../dados/doacoesStorage";
-import { FlatList, Text, View } from "react-native";
+import { FlatList, Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { styles } from "../utils/styling";
+import { useNavigation } from "@react-navigation/native";
+
 
 const PontoMemo = memo(function PontoMemo({ ponto: itemDoacao }: { ponto: ItemDoacao }) {
+  const navigation = useNavigation<any>();
+
   return (
-    <View style={styles.pontoItem}>
+    <Pressable onPress={() => {navigation.navigate('TelaDetalheDoacao', { doacaoId: itemDoacao.id })}} style={styles.pontoItem}>
         <Text style={styles.pontoNome}>{itemDoacao.nome}</Text>
         <Text style={styles.pontoEndereco}>Tipo: {itemDoacao.tipo}</Text>
         <Text style={styles.pontoEndereco}>Quantidade: {itemDoacao.quantidade}</Text>
-        <Text style={styles.pontoEndereco}>Data: {String(itemDoacao.criadoEm)}</Text>
         <Text style={styles.pontoEndereco}>Ponto de Destino: {itemDoacao.pontoDestino.nome}</Text>
-    </View>
+    </Pressable>
   )
 });
 

@@ -26,3 +26,13 @@ export function salvarDoacao(doacao: ItemDoacao): Promise<void> {
     );
   });
 }
+
+export function deletarDoacao(doacaoId: number): Promise<void> {
+  return listarDoacoes().then((doacoes) => {
+    const doacoesAtualizadas = doacoes.filter((item) => item.id !== doacaoId);
+    return AsyncStorage.setItem(
+      CHAVE_DOACOES,
+      JSON.stringify(doacoesAtualizadas),
+    );
+  });
+}
