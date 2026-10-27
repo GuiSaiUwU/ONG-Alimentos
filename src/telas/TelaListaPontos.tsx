@@ -8,7 +8,6 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { pontosMock } from "../dados/pontosMock";
 import { ItemDoacao, Ponto, RootStackParamList, TIPOS_DOACAO } from "../types";
 import {
   SafeAreaView,
@@ -22,6 +21,7 @@ import {
   salvarDoacao,
 } from "../dados/doacoesStorage";
 import { styles } from "../utils/styling";
+import { getPontos } from "../serivce/ponto-service";
 
 type Props = NativeStackScreenProps<RootStackParamList, "TelaListaPontos">;
 
@@ -45,6 +45,13 @@ export default function TelaListaPontos({ navigation, route }: Props) {
   const [sucesso, setSucesso] = useState("");
   const [doacaoCarregada, setDoacaoCarregada] = useState(!editando);
   const insets = useSafeAreaInsets();
+
+  const [pontos, setPontos] = useState<Ponto[]>([]);
+  useEffect(() => {
+    getPontos(1, "").then((response) => {
+      setPontos(response.content);
+    });
+  }, []);
 
   useEffect(() => {
     navigation.setOptions({
@@ -97,7 +104,7 @@ export default function TelaListaPontos({ navigation, route }: Props) {
       nome,
       tipo,
       quantidade: Number(quantidade),
-      pontoDestino: pontosMock.find((ponto) => ponto.id === pontoDestino)!,
+      pontoDestino: pontos.find((ponto) => ponto.id === pontoDestino)!,
     };
 
     const salvar = editando ? atualizarDoacao : salvarDoacao;
@@ -126,8 +133,8 @@ export default function TelaListaPontos({ navigation, route }: Props) {
       return;
     }
 
-    const pontosValidos = pontosMock.filter((ponto) =>
-      ponto.tiposDeDoacao.includes(tipo),
+    const pontosValidos = pontos.filter((ponto) =>
+      ponto.tiposDoacao.includes(tipo),
     );
 
     if (
@@ -155,7 +162,7 @@ export default function TelaListaPontos({ navigation, route }: Props) {
             paddingLeft: insets.left,
             paddingRight: insets.right,
           }}
-          data={pontosMock}
+          data={pontos}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
             <View style={styles.listContainer}>
@@ -201,8 +208,8 @@ export default function TelaListaPontos({ navigation, route }: Props) {
                   selectedValue={pontoDestino ?? -1}
                   onValueChange={setPontoDestino}
                 >
-                  {pontosMock
-                    .filter((ponto) => ponto.tiposDeDoacao.includes(tipo))
+                  {pontos
+                    .filter((ponto) => ponto.tiposDoacao.includes(tipo))
                     .map((ponto) => (
                       <Picker.Item
                         key={ponto.id}
