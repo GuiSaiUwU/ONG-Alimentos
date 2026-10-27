@@ -34,8 +34,10 @@ export type Ponto = {
     id: number;
     nome: string;
     endereco: string;
-    diasQueAtende: DIAS_SEMANA[];
-    tiposDeDoacao: TIPOS_DOACAO[];
+    diasQueAtende: string[];
+    tiposDoacao: string[];
+    latitude: number;
+    longitude: number;
 };
 
 

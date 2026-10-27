@@ -1,9 +1,10 @@
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
-import { pontosMock } from "../dados/pontosMock";
 import { Ponto, RootStackParamList } from "../types";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { styles } from "../utils/styling";
+import { useEffect, useState } from "react";
+import { getPontos } from "../serivce/ponto-service";
 
 type Props = NativeStackScreenProps<RootStackParamList, "TelaDetalhePonto">;
 
@@ -17,7 +18,7 @@ function DetalhePonto({ ponto }: { ponto: Ponto }) {
           Dias que atende: {ponto.diasQueAtende.join(", ")}
         </Text>
         <Text style={styles.linha}>
-          Tipos de doação: {ponto.tiposDeDoacao.join(", ")}
+          Tipos de doação: {ponto.tiposDoacao.join(", ")}
         </Text>
       </ScrollView>
     </SafeAreaView>
@@ -26,7 +27,13 @@ function DetalhePonto({ ponto }: { ponto: Ponto }) {
 
 export default function TelaDetalhePonto({ route }: Props) {
   const { pontoId } = route.params;
-  const ponto = pontosMock.find((item) => item.id === pontoId);
+  const [ponto, setPonto] = useState<Ponto | undefined>(undefined);
+  useEffect(() => {
+    getPontos(1, "").then((response) => {
+      const pontoEncontrado = response.content.find((p) => p.id === pontoId);
+      setPonto(pontoEncontrado);
+    });
+  }, [pontoId]);
 
   if (!ponto) {
     return (
