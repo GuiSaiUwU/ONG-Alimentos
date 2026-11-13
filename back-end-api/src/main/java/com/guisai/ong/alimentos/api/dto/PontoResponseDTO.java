@@ -1,11 +1,12 @@
 package com.guisai.ong.alimentos.api.dto;
 
 import java.util.List;
+import java.util.UUID;
 
 import com.guisai.ong.alimentos.api.entity.Ponto;
 
 public record PontoResponseDTO(
-    Long id,
+    UUID id,
     String nome,
     String endereco,
     List<String> diasQueAtende,

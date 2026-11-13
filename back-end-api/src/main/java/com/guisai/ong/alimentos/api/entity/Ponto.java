@@ -1,6 +1,8 @@
 package com.guisai.ong.alimentos.api.entity;
 
 import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 import com.guisai.ong.alimentos.api.dto.PontoRequestDTO;
 
@@ -28,8 +30,8 @@ import lombok.Setter;
 @Entity
 public class Ponto {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
     @Column(nullable = false)
     private String nome;
@@ -64,10 +66,10 @@ public class Ponto {
         ponto.setEndereco(pontoRequestDTO.endereco());
         ponto.setDiasQueAtende(pontoRequestDTO.diasQueAtende().stream()
                 .map(DIAS_SEMANA::valueOf)
-                .toList());
+                .collect(Collectors.toList()));
         ponto.setTiposDoacao(pontoRequestDTO.tiposDoacao().stream()
                 .map(TIPOS_DOACAO::valueOf)
-                .toList());
+                .collect(Collectors.toList()));
         ponto.setLatitude(pontoRequestDTO.latitude());
         ponto.setLongitude(pontoRequestDTO.longitude());
         return ponto;

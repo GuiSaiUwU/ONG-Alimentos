@@ -1,5 +1,7 @@
 package com.guisai.ong.alimentos.api.controller;
 
+import java.util.UUID;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -22,7 +24,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/pontos")
+@RequestMapping("/api/v1/pontos")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*", allowedHeaders = "*") // lol
 public class PontoController {
@@ -38,7 +40,7 @@ public class PontoController {
     }
 
     @GetMapping("/{pontoId}")
-    public PontoResponseDTO findById(@PathVariable Long pontoId) {
+    public PontoResponseDTO findById(@PathVariable UUID pontoId) {
         return pontoService.findById(pontoId);
     }
 
@@ -48,12 +50,12 @@ public class PontoController {
     }
 
     @PutMapping("/{pontoId}")
-    public PontoResponseDTO update(@PathVariable Long pontoId, @Valid @RequestBody PontoRequestDTO ponto) {
+    public PontoResponseDTO update(@PathVariable UUID pontoId, @Valid @RequestBody PontoRequestDTO ponto) {
         return pontoService.update(pontoId, ponto);
     }
 
     @DeleteMapping("/{pontoId}")
-    public void delete(@PathVariable Long pontoId) {
+    public void delete(@PathVariable UUID pontoId) {
         pontoService.delete(pontoId);
     }
 }
