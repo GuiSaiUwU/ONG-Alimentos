@@ -31,7 +31,7 @@ export enum DIAS_SEMANA {
 
 
 export type Ponto = {
-    id: number;
+    id: string;
     nome: string;
     endereco: string;
     diasQueAtende: string[];

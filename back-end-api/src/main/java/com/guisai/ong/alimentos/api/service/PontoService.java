@@ -1,5 +1,7 @@
 package com.guisai.ong.alimentos.api.service;
 
+import java.util.UUID;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -24,7 +26,7 @@ public class PontoService {
         return pontos.map(PontoResponseDTO::toDto);
     }
 
-    public PontoResponseDTO findById(Long id) {
+    public PontoResponseDTO findById(UUID id) {
         var ponto = pontoRepository.findById(id)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ponto não encontrado"));
 
@@ -36,11 +38,11 @@ public class PontoService {
         return PontoResponseDTO.toDto(pontoSalvo);
     }
 
-    public void delete(Long id) {
+    public void delete(UUID id) {
         pontoRepository.deleteById(id);
     }
 
-    public PontoResponseDTO update(Long id, PontoRequestDTO ponto) {
+    public PontoResponseDTO update(UUID id, PontoRequestDTO ponto) {
         var pontoExistente = pontoRepository.findById(id)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ponto não encontrado"));
 
