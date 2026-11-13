@@ -4,7 +4,7 @@ import { Ponto, RootStackParamList } from "../types";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { styles } from "../utils/styling";
 import { useEffect, useState } from "react";
-import { getPontos } from "../serivce/ponto-service";
+import { getPontos } from "../service/ponto-service";
 
 type Props = NativeStackScreenProps<RootStackParamList, "TelaDetalhePonto">;
 

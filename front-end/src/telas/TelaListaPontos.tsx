@@ -21,7 +21,7 @@ import {
   salvarDoacao,
 } from "../dados/doacoesStorage";
 import { styles } from "../utils/styling";
-import { getPontos } from "../serivce/ponto-service";
+import { getPontos } from "../service/ponto-service";
 
 type Props = NativeStackScreenProps<RootStackParamList, "TelaListaPontos">;
 
