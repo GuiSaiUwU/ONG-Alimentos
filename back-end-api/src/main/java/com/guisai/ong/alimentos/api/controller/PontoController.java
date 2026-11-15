@@ -3,8 +3,9 @@ package com.guisai.ong.alimentos.api.controller;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,13 +31,12 @@ import lombok.RequiredArgsConstructor;
 public class PontoController {
     private final PontoService pontoService;
 
-    @GetMapping
+    @GetMapping("/filtro")
     public Page<PontoResponseDTO> findAll(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(defaultValue = "id") String sort
+            @RequestParam(defaultValue = "") String filtro,
+            @PageableDefault(size = 10, sort = "nome", direction = Direction.ASC) Pageable pageable
     ) {
-        return pontoService.findAll(PageRequest.of(page, Math.max(1, Math.min(size, 50)), Sort.by(sort)));
+        return pontoService.findByFiltro(filtro, pageable);
     }
 
     @GetMapping("/{pontoId}")

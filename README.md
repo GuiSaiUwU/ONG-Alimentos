@@ -43,11 +43,17 @@ Todos os endpoints usam o prefixo `/api/v1/pontos`.
 
 | Método | URL | Resposta esperada |
 |---|---|---|
-| GET | `/api/v1/pontos?page=0&size=20&sort=id` | `200 OK` com a página de pontos |
+| GET | `/api/v1/pontos/filtro?filtro=...&page=0&size=10` | `200 OK` com a página filtrada de pontos |
 | GET | `/api/v1/pontos/{id}` | `200 OK` com um ponto |
 | POST | `/api/v1/pontos` | `200 OK` com o ponto criado |
 | PUT | `/api/v1/pontos/{id}` | `200 OK` com o ponto atualizado |
 | DELETE | `/api/v1/pontos/{id}` | `200 OK` |
+
+O endpoint de filtro pesquisa por `nome` ou `endereco` sem diferenciar letras
+maiúsculas e minúsculas. O campo `endereco` representa o bairro utilizado nos
+critérios de busca. Por padrão, são retornados 10 pontos por página, ordenados
+por `nome`. A ordenação pode ser alterada com o parâmetro `sort`, por exemplo:
+`sort=endereco,asc`.
 
 ### Exemplo de requisição
 
@@ -64,23 +70,87 @@ Todos os endpoints usam o prefixo `/api/v1/pontos`.
 
 ### Respostas documentadas
 
-#### GET /api/v1/pontos
+#### 1. Listagem sem filtro
+
+```text
+GET /api/v1/pontos/filtro?page=0&size=10
+```
 
 ```json
 {
   "content": [
     {
-      "id": "01e0baad-d52a-4659-abc4-39f506e922dd",
-      "nome": "Posto de Coleta Norte",
-      "endereco": "Rua Nova, 999",
-      "diasQueAtende": ["SABADO"],
-      "tiposDoacao": ["ROUPAS", "HIGIENE"],
-      "latitude": -16.6500,
-      "longitude": -49.2564
+      "id": "uuid-do-ponto",
+      "nome": "Ação Solidária",
+      "endereco": "Avenida Circular, 768, Setor Pedro Ludovico",
+      "diasQueAtende": ["SEGUNDA", "QUARTA", "SEXTA"],
+      "tiposDoacao": ["ALIMENTOS", "ROUPAS"],
+      "latitude": -16.7043,
+      "longitude": -49.2675
     }
   ],
-  "totalElements": 8,
-  "totalPages": 1
+  "page": {
+    "size": 10,
+    "number": 0,
+    "totalElements": 26,
+    "totalPages": 3
+  }
+}
+```
+
+#### 2. Filtragem por bairro (`endereco`)
+
+```text
+GET /api/v1/pontos/filtro?filtro=Setor%20Bueno&page=0&size=10&sort=endereco,asc
+```
+
+```json
+{
+  "content": [
+    {
+      "id": "uuid-do-ponto",
+      "nome": "Coração de Mãe",
+      "endereco": "Avenida Mutirão, esquina com T-10, Setor Bueno",
+      "diasQueAtende": ["TERCA", "QUINTA"],
+      "tiposDoacao": ["ALIMENTOS", "HIGIENE", "LIVROS"],
+      "latitude": -16.7183,
+      "longitude": -49.2648
+    }
+  ],
+  "page": {
+    "size": 10,
+    "number": 0,
+    "totalElements": 3,
+    "totalPages": 1
+  }
+}
+```
+
+#### 3. Segunda página
+
+```text
+GET /api/v1/pontos/filtro?page=1&size=10
+```
+
+```json
+{
+  "content": [
+    {
+      "id": "uuid-do-ponto",
+      "nome": "Luz da Esperança",
+      "endereco": "Rua Pedro Brant, 2, Santo Hilário",
+      "diasQueAtende": ["SEGUNDA", "QUARTA", "SABADO"],
+      "tiposDoacao": ["ALIMENTOS", "RACOES"],
+      "latitude": -16.7298,
+      "longitude": -49.2645
+    }
+  ],
+  "page": {
+    "size": 10,
+    "number": 1,
+    "totalElements": 26,
+    "totalPages": 3
+  }
 }
 ```
 

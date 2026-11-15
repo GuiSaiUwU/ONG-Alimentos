@@ -39,7 +39,7 @@ export default function TelaListaPontos({ navigation, route }: Props) {
   const editando = doacaoId !== undefined;
   const [nome, setNome] = useState("");
   const [quantidade, setQuantidade] = useState("");
-  const [pontoDestino, setPontoDestino] = useState<number | null>(null);
+  const [pontoDestino, setPontoDestino] = useState<string | null>(null);
   const [tipo, setTipo] = useState<TIPOS_DOACAO>(TIPOS_DOACAO.ALIMENTOS);
   const [erro, setErro] = useState("");
   const [sucesso, setSucesso] = useState("");
@@ -93,7 +93,7 @@ export default function TelaListaPontos({ navigation, route }: Props) {
       return;
     }
 
-    if (pontoDestino === null || pontoDestino === -1) {
+    if (pontoDestino === null || pontoDestino === "") {
       setErro("Selecione um ponto de doação válido");
       return;
     }
@@ -145,7 +145,7 @@ export default function TelaListaPontos({ navigation, route }: Props) {
     ) {
       setPontoDestino(pontosValidos[0].id);
     } else if (pontosValidos.length === 0) {
-      setPontoDestino(-1);
+      setPontoDestino("");
     }
   }, [doacaoCarregada, doacaoId, editando, pontoDestino, tipo]);
 
@@ -205,7 +205,7 @@ export default function TelaListaPontos({ navigation, route }: Props) {
               <Text>Selecione o ponto de doação:</Text>
               <View style={styles.pickerContainer}>
                 <Picker
-                  selectedValue={pontoDestino ?? -1}
+                  selectedValue={pontoDestino ?? ""}
                   onValueChange={setPontoDestino}
                 >
                   {pontos

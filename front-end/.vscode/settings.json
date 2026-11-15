@@ -4,5 +4,5 @@
         "react-native/types_generated/",
         "react-native/libraries/"
     ],
-    "npm.packageManager": "bun"
+    "npm.packageManager": "npm"
 }
