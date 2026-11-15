@@ -20,8 +20,8 @@ import lombok.RequiredArgsConstructor;
 public class PontoService {
     private final PontoRepository pontoRepository;
 
-    public Page<PontoResponseDTO> findAll(Pageable pageable) {
-        Page<Ponto> pontos = pontoRepository.findAll(pageable);
+    public Page<PontoResponseDTO> findByFiltro(String filtro, Pageable pageable) {
+        Page<Ponto> pontos = pontoRepository.findByFiltro(filtro.toUpperCase(), pageable);
 
         return pontos.map(PontoResponseDTO::toDto);
     }
