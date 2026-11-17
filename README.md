@@ -10,6 +10,12 @@ O projeto é dividido em duas partes:
 - Java 21
 - Maven Wrapper
 - Node.js e npm, para executar o front-end
+- Android Studio/Expo Go (para testar no Android)
+
+Para testar em um celular físico, troque o endereço no arquivo
+`front-end/.env` (variável de ambiente `EXPO_PUBLIC_SERVIDOR_URL`) pelo IP da
+máquina na rede local, por exemplo `http://192.168.0.10:8080`. O back-end deve
+estar em execução antes de utilizar as funcionalidades que dependem da API.
 
 ## Executando o back-end
 
@@ -281,5 +287,3 @@ O front-end está configurado para acessar a API em:
 ```text
 http://localhost:8080
 ```
-
-Por isso, o back-end deve estar em execução antes de utilizar as funcionalidades que dependem da API.
