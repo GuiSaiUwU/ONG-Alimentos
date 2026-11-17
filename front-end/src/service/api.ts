@@ -1,6 +1,15 @@
 export const SERVIDOR_URL = process.env.EXPO_PUBLIC_SERVIDOR_URL || "http://localhost:8080";
 const API_URL = `${SERVIDOR_URL}/api/v1`;
 
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public readonly status: number,
+  ) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
 
 export async function requisitarPaginado<T>(
   endpoint: string,
@@ -13,7 +22,10 @@ export async function requisitarPaginado<T>(
   });
 
   if (!response.ok) {
-    throw new Error(`Falha no ${API_URL}${endpoint} | status: ${response.status}`);
+    throw new ApiError(
+      `Falha no ${API_URL}${endpoint} | status: ${response.status}`,
+      response.status,
+    );
   }
 
   // O DELETE responde sem corpo: nesse caso não há JSON para ler.
