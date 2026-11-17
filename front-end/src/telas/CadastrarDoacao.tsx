@@ -8,13 +8,17 @@ import {
   ScrollView,
   Text,
   TextInput,
+  TouchableOpacity,
   View,
 } from "react-native";
-import { Picker } from "@react-native-picker/picker";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { atualizarDoacao, listarDoacoes, salvarDoacao } from "../dados/doacoesStorage";
 import { getPontos, ultimaPagina } from "../service/ponto-service";
-import { ItemDoacao, Ponto, RootStackParamList, TIPOS_DOACAO } from "../types";
+import {
+  postDoacao,
+  putDoacao,
+  getDoacaoById,
+} from "../service/doacoes-service";
+import { Ponto, RootStackParamList, TIPOS_DOACAO } from "../types";
 import { styles } from "../utils/styling";
 
 type Props = NativeStackScreenProps<RootStackParamList, "CadastrarDoacao">;
@@ -32,7 +36,9 @@ export default function CadastrarDoacao({ navigation, route }: Props) {
   const [erro, setErro] = useState("");
 
   useEffect(() => {
-    navigation.setOptions({ title: editando ? "Editar doação" : "Cadastrar doação" });
+    navigation.setOptions({
+      title: editando ? "Editar doação" : "Cadastrar doação",
+    });
   }, [editando, navigation]);
 
   useEffect(() => {
@@ -40,14 +46,19 @@ export default function CadastrarDoacao({ navigation, route }: Props) {
 
     async function carregar() {
       try {
-        const [doacoes, primeiraPagina] = await Promise.all([
-          editando ? listarDoacoes() : Promise.resolve([]),
+        const [doacao, primeiraPagina] = await Promise.all([
+          editando ? getDoacaoById(doacaoId) : Promise.resolve(null),
           getPontos(0, ""),
         ]);
         let pontosCarregados = primeiraPagina.content;
         let pagina = 0;
 
-        while (!ultimaPagina({ ...primeiraPagina, page: { ...primeiraPagina.page, number: pagina } })) {
+        while (
+          !ultimaPagina({
+            ...primeiraPagina,
+            page: { ...primeiraPagina.page, number: pagina },
+          })
+        ) {
           pagina += 1;
           const resposta = await getPontos(pagina, "");
           pontosCarregados = [...pontosCarregados, ...resposta.content];
@@ -62,14 +73,17 @@ export default function CadastrarDoacao({ navigation, route }: Props) {
 
         setPontos(pontosCarregados);
         if (editando) {
-          const doacao = doacoes.find((item) => item.id === doacaoId);
           if (!doacao) {
             setErro("Doação não encontrada.");
           } else {
             setNome(doacao.nome);
             setQuantidade(String(doacao.quantidade));
-            setTipo(doacao.tipo);
-            setPontoDestino(doacao.pontoDestino.id);
+            setTipo(doacao.tipoItem);
+            setPontoDestino(
+              pontosCarregados.find(
+                (ponto) => ponto.nome === doacao.pontoDestino,
+              )?.id ?? null,
+            );
           }
         }
       } catch (error) {
@@ -89,15 +103,19 @@ export default function CadastrarDoacao({ navigation, route }: Props) {
     };
   }, [doacaoId, editando]);
 
-  const pontosValidos = pontos.filter((ponto) =>
-    ponto.tiposDoacao.some(
-      (tipoDoacao) => tipoDoacao.toLocaleLowerCase() === tipo.toLocaleLowerCase(),
-    ) ||
-    ponto.tiposDoacao.includes(tipo.toUpperCase()),
+  const pontosValidos = pontos.filter(
+    (ponto) =>
+      ponto.tiposDoacao.some(
+        (tipoDoacao) =>
+          tipoDoacao.toLocaleLowerCase() === tipo.toLocaleLowerCase(),
+      ) || ponto.tiposDoacao.includes(tipo.toUpperCase()),
   );
 
   useEffect(() => {
-    if (pontosValidos.length > 0 && !pontosValidos.some((ponto) => ponto.id === pontoDestino)) {
+    if (
+      pontosValidos.length > 0 &&
+      !pontosValidos.some((ponto) => ponto.id === pontoDestino)
+    ) {
       setPontoDestino(pontosValidos[0].id);
     }
   }, [pontos, pontoDestino, tipo]);
@@ -121,21 +139,19 @@ export default function CadastrarDoacao({ navigation, route }: Props) {
       return;
     }
 
-    const itemDoacao: ItemDoacao = {
-      id: doacaoId ?? -1,
-      criadoEm: new Date(),
+    const request = {
       nome: nomeNormalizado,
-      tipo,
+      tipoItem: tipo,
       quantidade: quantidadeNumerica,
-      pontoDestino: ponto,
+      pontoDestino: ponto.nome,
     };
 
     setSalvando(true);
     try {
       if (editando) {
-        await atualizarDoacao(itemDoacao);
+        await putDoacao(doacaoId, request);
       } else {
-        await salvarDoacao(itemDoacao);
+        await postDoacao(request);
       }
       navigation.goBack();
     } catch (error) {
@@ -180,31 +196,50 @@ export default function CadastrarDoacao({ navigation, route }: Props) {
             onChangeText={setQuantidade}
           />
           <Text>Selecione o tipo de doação:</Text>
-          <View style={styles.pickerContainer}>
-            <Picker selectedValue={tipo} onValueChange={setTipo}>
-              {Object.values(TIPOS_DOACAO).map((tipoDisponivel) => (
-                <Picker.Item
-                  key={tipoDisponivel}
-                  label={tipoDisponivel}
-                  value={tipoDisponivel}
-                />
-              ))}
-            </Picker>
+          <View style={styles.optionsContainer}>
+            {Object.values(TIPOS_DOACAO).map((tipoDisponivel) => (
+              <TouchableOpacity
+                key={tipoDisponivel}
+                style={[
+                  styles.option,
+                  tipo === tipoDisponivel && styles.optionSelected,
+                ]}
+                onPress={() => setTipo(tipoDisponivel)}
+              >
+                <Text
+                  style={
+                    tipo === tipoDisponivel
+                      ? styles.optionTextSelected
+                      : styles.optionText
+                  }
+                >
+                  {tipoDisponivel}
+                </Text>
+              </TouchableOpacity>
+            ))}
           </View>
           <Text>Selecione o ponto de doação:</Text>
-          <View style={styles.pickerContainer}>
-            <Picker
-              selectedValue={pontoDestino ?? ""}
-              onValueChange={setPontoDestino}
-            >
-              {pontosValidos.map((pontoDisponivel) => (
-                <Picker.Item
-                  key={pontoDisponivel.id}
-                  label={pontoDisponivel.nome}
-                  value={pontoDisponivel.id}
-                />
-              ))}
-            </Picker>
+          <View style={styles.optionsContainer}>
+            {pontosValidos.map((pontoDisponivel) => (
+              <TouchableOpacity
+                key={pontoDisponivel.id}
+                style={[
+                  styles.option,
+                  pontoDestino === pontoDisponivel.id && styles.optionSelected,
+                ]}
+                onPress={() => setPontoDestino(pontoDisponivel.id)}
+              >
+                <Text
+                  style={
+                    pontoDestino === pontoDisponivel.id
+                      ? styles.optionTextSelected
+                      : styles.optionText
+                  }
+                >
+                  {pontoDisponivel.nome}
+                </Text>
+              </TouchableOpacity>
+            ))}
           </View>
           {pontosValidos.length === 0 ? (
             <Text style={styles.textErro}>
