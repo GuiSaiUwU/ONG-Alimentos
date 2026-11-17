@@ -3,14 +3,11 @@ import { styles } from "../utils/styling";
 import { deleteDoacao, getDoacaoById } from "../service/doacoes-service";
 import { useCallback, useState } from "react";
 import { ItemDoacao, RootStackParamList } from "../types";
-import { Alert, Pressable, Text, View } from "react-native";
+import { ActivityIndicator, Alert, Platform, Pressable, Text, View } from "react-native";
 import { format } from "date-fns";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import {
-  NavigationProp,
-  useFocusEffect,
-  useNavigation,
-} from "@react-navigation/native";
+import { useFocusEffect } from "@react-navigation/native";
+import { ApiError } from "../service/api";
 
 type Props = NativeStackScreenProps<RootStackParamList, "TelaDetalheDoacao">;
 
@@ -32,75 +29,90 @@ function DetalheItemDoacao({ itemDoacao }: { itemDoacao: ItemDoacao }) {
   );
 }
 
-function BotaoDeletar({ doacaoId }: { doacaoId: string }) {
-  const navigation = useNavigation<NavigationProp<any>>();
-
-  return (
-    <Pressable
-      style={[styles.button, { backgroundColor: "#ff5b5b" }]}
-      onPress={() => {
-        Alert.alert("Excluir Doação", "Deseja realmente excluir a doação?", [
-          {
-            text: "Cancelar",
-            style: "cancel",
-          },
-          {
-            text: "Confirmar",
-            onPress: async () => {
-              try {
-                await deleteDoacao(doacaoId);
-                navigation.goBack();
-              } catch (error) {
-                console.error("Erro ao deletar: ", error);
-              }
-            },
-          },
-        ]);
-      }}
-    >
-      <Text style={styles.buttonText}>Excluir Doação</Text>
-    </Pressable>
-  );
-}
-
-function BotaoEditar({ doacaoId }: { doacaoId: string }) {
-  const navigation = useNavigation<NavigationProp<any>>();
-
-  return (
-    <Pressable
-      style={styles.button}
-      onPress={() => navigation.navigate("CadastrarDoacao", { doacaoId })}
-    >
-      <Text style={styles.buttonText}>Editar Doação</Text>
-    </Pressable>
-  );
-}
-
-export default function DetalheDoacao({ route }: Props) {
+export default function DetalheDoacao({ navigation, route }: Props) {
   const { doacaoId } = route.params;
   const [doacao, setDoacao] = useState<ItemDoacao | null>(null);
+  const [erro, setErro] = useState("");
+  const [carregando, setCarregando] = useState(true);
+  const [excluindo, setExcluindo] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
+      setCarregando(true);
+      setErro("");
       getDoacaoById(doacaoId)
         .then(setDoacao)
-        .catch((error) => console.error("Erro ao carregar doação:", error));
+        .catch((error: unknown) => {
+          setDoacao(null);
+          setErro(
+            error instanceof ApiError && error.status === 404
+              ? "doação não encontrada"
+              : `Erro ao carregar a doação: ${mensagemDeErro(error)}`,
+          );
+        })
+        .finally(() => setCarregando(false));
     }, [doacaoId]),
   );
 
+  function confirmarExclusao() {
+    if (Platform.OS === "web") {
+      if (window.confirm("Deseja realmente excluir a doação?")) {
+        void excluir();
+      }
+      return;
+    }
+
+    Alert.alert("Excluir doação", "Deseja realmente excluir a doação?", [
+      { text: "Cancelar", style: "cancel" },
+      { text: "Excluir", style: "destructive", onPress: () => void excluir() },
+    ]);
+  }
+
+  async function excluir() {
+    setErro("");
+    setExcluindo(true);
+    try {
+      await deleteDoacao(doacaoId);
+      navigation.goBack();
+    } catch (error) {
+      setErro(`Erro ao excluir a doação: ${mensagemDeErro(error)}`);
+    } finally {
+      setExcluindo(false);
+    }
+  }
+
   return (
-    <SafeAreaView>
-      {doacao ? (
-        <>
-          <View style={[styles.pickerContainer, { paddingBottom: 8 }]}>
-            <DetalheItemDoacao itemDoacao={doacao} />
-            <BotaoEditar doacaoId={doacao.id} />
-            <BotaoDeletar doacaoId={doacao.id} />
-          </View>
-        </>
-      ) : (
-        <Text>Doação não encontrada</Text>
-      )}
+    <SafeAreaView style={styles.safeArea}>
+      {carregando ? <ActivityIndicator size="large" color="#b4dd1e" /> : null}
+      {!carregando && doacao ? (
+        <View style={[styles.pickerContainer, { paddingBottom: 8 }]}>
+          <DetalheItemDoacao itemDoacao={doacao} />
+          <Pressable
+            style={styles.button}
+            onPress={() => navigation.navigate("CadastrarDoacao", { doacaoId })}
+            disabled={excluindo}
+          >
+            <Text style={styles.buttonText}>Editar doação</Text>
+          </Pressable>
+          <Pressable
+            style={[styles.button, { backgroundColor: "#ff5b5b" }]}
+            onPress={confirmarExclusao}
+            disabled={excluindo}
+          >
+            <Text style={styles.buttonText}>
+              {excluindo ? "Excluindo..." : "Excluir doação"}
+            </Text>
+          </Pressable>
+        </View>
+      ) : null}
+      {!carregando && !doacao ? (
+        <Text style={styles.textErro}>{erro || "doação não encontrada"}</Text>
+      ) : null}
+      {erro && doacao ? <Text style={styles.textErro}>{erro}</Text> : null}
     </SafeAreaView>
   );
+}
+
+function mensagemDeErro(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }
