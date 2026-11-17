@@ -46,7 +46,7 @@ public class DoacaoService {
     }
 
     public void delete(UUID id) {
-        doacaoRepository.deleteById(id);
+        doacaoRepository.delete(buscarPorId(id));
     }
 
     private Doacao buscarPorId(UUID id) {
