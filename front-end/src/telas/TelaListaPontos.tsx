@@ -9,21 +9,49 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { useCallback, useRef, useState } from "react";
 import { useFocusEffect } from "@react-navigation/native";
 import { Ponto, RootStackParamList } from "../types";
 import { styles } from "../utils/styling";
 import { getPontos, ultimaPagina } from "../service/ponto-service";
+import {
+  adicionarFavorito,
+  getFavoritos,
+  removerFavorito,
+} from "../service/favoritos-service";
 
 type Props = NativeStackScreenProps<RootStackParamList, "TelaListaPontos">;
 
-function PontoItem({ ponto, onPress }: { ponto: Ponto; onPress: () => void }) {
+function PontoItem({
+  ponto,
+  onPress,
+  favorito,
+  onAlternarFavorito,
+}: {
+  ponto: Ponto;
+  onPress: () => void;
+  favorito: boolean;
+  onAlternarFavorito: () => void;
+}) {
   return (
-    <Pressable onPress={onPress} style={styles.pontoItem}>
-      <Text style={styles.pontoNome}>{ponto.nome}</Text>
-      <Text style={styles.pontoEndereco}>{ponto.endereco}</Text>
-    </Pressable>
+    <View style={[styles.pontoItem, styles.pontoItemLinha]}>
+      <Pressable onPress={onPress} style={styles.pontoItemConteudo}>
+        <Text style={styles.pontoNome}>{ponto.nome}</Text>
+        <Text style={styles.pontoEndereco}>{ponto.endereco}</Text>
+      </Pressable>
+      <Pressable
+        accessibilityLabel={favorito ? "Desfavoritar ponto" : "Favoritar ponto"}
+        accessibilityRole="button"
+        onPress={onAlternarFavorito}
+        style={styles.favoriteButton}
+      >
+        <Text style={styles.favoriteText}>{favorito ? "♥" : "♡"}</Text>
+      </Pressable>
+    </View>
   );
 }
 
@@ -35,7 +63,16 @@ export default function TelaListaPontos({ navigation }: Props) {
   const [ehUltimaPagina, setEhUltimaPagina] = useState(false);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
+  const [favoritos, setFavoritos] = useState<Set<string>>(new Set());
   const buscandoMais = useRef(false);
+
+  const carregarFavoritos = useCallback(() => {
+    getFavoritos()
+      .then((ids) => setFavoritos(new Set(ids)))
+      .catch((error: unknown) =>
+        setErro(`Erro ao carregar favoritos: ${mensagemDeErro(error)}`),
+      );
+  }, []);
 
   const carregarPrimeiraPagina = useCallback(() => {
     setCarregando(true);
@@ -46,15 +83,50 @@ export default function TelaListaPontos({ navigation }: Props) {
         setPaginaAtual(0);
         setEhUltimaPagina(ultimaPagina(resposta));
       })
-      .catch((error: unknown) => setErro(`Erro ao carregar pontos: ${mensagemDeErro(error)}`))
+      .catch((error: unknown) =>
+        setErro(`Erro ao carregar pontos: ${mensagemDeErro(error)}`),
+      )
       .finally(() => setCarregando(false));
   }, [buscaPonto]);
 
   useFocusEffect(
     useCallback(() => {
       carregarPrimeiraPagina();
-    }, [carregarPrimeiraPagina]),
+      carregarFavoritos();
+    }, [carregarFavoritos, carregarPrimeiraPagina]),
   );
+
+  async function alternarFavorito(id: string) {
+    const eraFavorito = favoritos.has(id);
+    setFavoritos((atual) => {
+      const proximo = new Set(atual);
+      if (eraFavorito) {
+        proximo.delete(id);
+      } else {
+        proximo.add(id);
+      }
+      return proximo;
+    });
+
+    try {
+      if (eraFavorito) {
+        await removerFavorito(id);
+      } else {
+        await adicionarFavorito(id);
+      }
+    } catch (error) {
+      setFavoritos((atual) => {
+        const revertido = new Set(atual);
+        if (eraFavorito) {
+          revertido.add(id);
+        } else {
+          revertido.delete(id);
+        }
+        return revertido;
+      });
+      setErro(`Erro ao atualizar favoritos: ${mensagemDeErro(error)}`);
+    }
+  }
 
   async function carregarMaisPontos() {
     if (buscandoMais.current || ehUltimaPagina || carregando) {
@@ -95,6 +167,8 @@ export default function TelaListaPontos({ navigation }: Props) {
             <View style={styles.listContainer}>
               <PontoItem
                 ponto={item}
+                favorito={favoritos.has(item.id)}
+                onAlternarFavorito={() => void alternarFavorito(item.id)}
                 onPress={() =>
                   navigation.navigate("TelaDetalhePonto", { pontoId: item.id })
                 }
@@ -120,6 +194,12 @@ export default function TelaListaPontos({ navigation }: Props) {
                 onPress={() => navigation.navigate("TelaMinhasDoacoes")}
               >
                 <Text style={styles.buttonText}>Minhas doações</Text>
+              </Pressable>
+              <Pressable
+                style={[styles.button, { backgroundColor: "#d69e2e" }]}
+                onPress={() => navigation.navigate("TelaMeusPontos")}
+              >
+                <Text style={styles.buttonText}>Meus pontos</Text>
               </Pressable>
               <Text style={styles.title}>Pontos de coleta</Text>
               <TextInput

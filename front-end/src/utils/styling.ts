@@ -92,6 +92,24 @@ export const styles = StyleSheet.create({
     backgroundColor: "#fff",
     minHeight: 44,
   },
+  pontoItemConteudo: {
+    flex: 1,
+  },
+  pontoItemLinha: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  favoriteButton: {
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  favoriteText: {
+    color: "#e01919",
+    fontSize: 30,
+    lineHeight: 34,
+  },
   pontoNome: {
     fontSize: 16,
     fontWeight: "600",

@@ -68,6 +68,7 @@ export type PontoRequest = {
 
 export type RootStackParamList = {
     TelaListaPontos: undefined;
+    TelaMeusPontos: undefined;
     TelaDetalhePonto: { pontoId: string };
     TelaMinhasDoacoes: undefined;
     TelaDetalheDoacao: { doacaoId: string };
