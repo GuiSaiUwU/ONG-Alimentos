@@ -201,6 +201,53 @@ Ocorre no GET ou PUT de um UUID que não existe:
 
 O CORS está liberado para permitir o consumo da API pelo front-end.
 
+## Doações
+
+Os endpoints de doações implementam o CRUD com validação no servidor. A data
+`criadoEm` é definida pela API no cadastro e preservada nas edições.
+
+![Swagger com os endpoints de doações](./.docs/swagger-endpoints.png)
+
+| Método | URL | Resposta esperada |
+|---|---|---|
+| GET | `/api/v1/doacoes/filtro?filtro=alimento&page=0&size=10` | `200 OK`, filtrado por `tipoItem` e ordenado por `criadoEm` decrescente |
+| GET | `/api/v1/doacoes/{id}` | `200 OK` com a doação, ou `404 Not Found` |
+| POST | `/api/v1/doacoes` | `200 OK` com a doação criada |
+| PUT | `/api/v1/doacoes/{id}` | `200 OK` com a doação atualizada, ou `404 Not Found` |
+| DELETE | `/api/v1/doacoes/{id}` | `200 OK` |
+
+O corpo de POST e PUT deve conter `nome`, `tipoItem`, `quantidade` maior que
+zero e `pontoDestino`. `tipoItem` aceita somente `Alimentos`, `Roupas`,
+`Livros`, `Brinquedos`, `Calçados`, `Higiene` ou `Rações`. `id` e `criadoEm`
+são gerados e controlados pela API.
+
+### Exemplos de erros documentados no Swagger
+
+#### 400 Bad Request — validação
+
+![Swagger retornando 400 para uma doação inválida](./.docs/swagger-400.png)
+
+```json
+{
+  "nome": "",
+  "tipoItem": "",
+  "quantidade": 0,
+  "pontoDestino": ""
+}
+```
+
+#### 404 Not Found — doação inexistente
+
+![Swagger retornando 404 para uma doação inexistente](./.docs/swagger-404.png)
+
+```json
+{
+  "status": 404,
+  "error": "Not Found",
+  "message": "Doação não encontrada"
+}
+```
+
 ## Executando o front-end
 
 Em outro terminal:
