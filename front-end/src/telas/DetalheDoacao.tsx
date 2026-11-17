@@ -69,7 +69,7 @@ function BotaoEditar({ doacaoId }: { doacaoId: number }) {
   return (
     <Pressable
       style={styles.button}
-      onPress={() => navigation.navigate("TelaListaPontos", { doacaoId })}
+      onPress={() => navigation.navigate("CadastrarDoacao", { doacaoId })}
     >
       <Text style={styles.buttonText}>Editar Doação</Text>
     </Pressable>

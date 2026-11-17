@@ -19,8 +19,8 @@ export function putPonto(id: string, ponto: PontoRequest): Promise<PaginaRespons
   return put<PaginaResponse<Ponto>>(`/pontos/${id}`, ponto);
 }
 
-export function deletePonto(id: string): Promise<PaginaResponse<void>> {
-  return del<PaginaResponse<void>>(`/pontos/${id}`);
+export function deletePonto(id: string): Promise<void> {
+  return del<void>(`/pontos/${id}`);
 }
 
 export function ultimaPagina(Page: PaginaResponse<Ponto>): boolean {

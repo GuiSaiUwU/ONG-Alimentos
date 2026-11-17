@@ -61,8 +61,10 @@ export type PontoRequest = {
 
 
 export type RootStackParamList = {
-    TelaListaPontos: { doacaoId?: number } | undefined;
+    TelaListaPontos: undefined;
     TelaDetalhePonto: { pontoId: string };
     TelaMinhasDoacoes: undefined;
     TelaDetalheDoacao: { doacaoId: number };
+    CadastrarPonto: { pontoId?: string } | undefined;
+    CadastrarDoacao: { doacaoId?: number } | undefined;
 };
