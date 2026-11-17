@@ -7,13 +7,14 @@ import {
   Text,
   TextInput,
   View,
+  ActivityIndicator
 } from "react-native";
 import { ItemDoacao, Ponto, RootStackParamList, TIPOS_DOACAO } from "../types";
 import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Picker } from "@react-native-picker/picker";
 import {
   atualizarDoacao,
@@ -21,7 +22,7 @@ import {
   salvarDoacao,
 } from "../dados/doacoesStorage";
 import { styles } from "../utils/styling";
-import { getPontos } from "../service/ponto-service";
+import { getPontos, ultimaPagina } from "../service/ponto-service";
 
 type Props = NativeStackScreenProps<RootStackParamList, "TelaListaPontos">;
 
@@ -47,11 +48,11 @@ export default function TelaListaPontos({ navigation, route }: Props) {
   const insets = useSafeAreaInsets();
 
   const [pontos, setPontos] = useState<Ponto[]>([]);
-  useEffect(() => {
-    getPontos(1, "").then((response) => {
-      setPontos(response.content);
-    });
-  }, []);
+  const [paginaAtual, setPaginaAtual] = useState(0);
+  const [buscaPonto, setBuscaPonto] = useState("");
+  const [ehUltimaPagina, setEhUltimaPagina] = useState(false);
+  const buscandoMais = useRef(false);
+  const [carregando, setCarregando] = useState(true);
 
   useEffect(() => {
     navigation.setOptions({
@@ -134,7 +135,7 @@ export default function TelaListaPontos({ navigation, route }: Props) {
     }
 
     const pontosValidos = pontos.filter((ponto) =>
-      ponto.tiposDoacao.includes(tipo),
+      ponto.tiposDoacao.includes(tipo.toUpperCase()),
     );
 
     if (
@@ -144,10 +145,52 @@ export default function TelaListaPontos({ navigation, route }: Props) {
         !pontosValidos.some((ponto) => ponto.id === pontoDestino))
     ) {
       setPontoDestino(pontosValidos[0].id);
-    } else if (pontosValidos.length === 0) {
-      setPontoDestino("");
     }
   }, [doacaoCarregada, doacaoId, editando, pontoDestino, tipo]);
+  
+  function carregarPrimeiraPagina() {
+    setCarregando(true);
+    getPontos(0, buscaPonto)
+      .then((resposta) => {
+        setPontos(resposta.content);
+        setPaginaAtual(0);
+        setEhUltimaPagina(ultimaPagina(resposta));
+      })
+      .catch((erro) => {
+        setErro("Erro ao carregar pontos: " + erro.message);
+      }).finally(() => {
+        setCarregando(false);
+      });
+  }
+
+  useEffect(() => {
+    carregarPrimeiraPagina();
+  }, [buscaPonto]);
+
+  async function carregarMaisPontos() {
+    if (buscandoMais.current || ehUltimaPagina || carregando) {
+      return;
+    }
+
+    buscandoMais.current = true;
+    const proximaPagina = paginaAtual + 1;
+
+    try {
+      const resposta = await getPontos(proximaPagina, buscaPonto);
+      setPontos((atual) => [...atual, ...resposta.content]);
+      setPaginaAtual(proximaPagina);
+      setEhUltimaPagina(ultimaPagina(resposta));
+    } catch (error) {
+      setErro(
+        "Erro ao carregar mais pontos: " + typeof error === "object" &&
+          error instanceof Error
+          ? error.message
+          : String(error),
+      );
+    } finally {
+      buscandoMais.current = false;
+    }
+  }
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["bottom", "left", "right"]}>
@@ -163,7 +206,9 @@ export default function TelaListaPontos({ navigation, route }: Props) {
             paddingRight: insets.right,
           }}
           data={pontos}
-          keyExtractor={(item) => item.id.toString()}
+          onEndReached={carregarMaisPontos}
+          onEndReachedThreshold={0.8}
+          keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
             <View style={styles.listContainer}>
               <PontoItem
@@ -198,7 +243,7 @@ export default function TelaListaPontos({ navigation, route }: Props) {
               <View style={styles.pickerContainer}>
                 <Picker selectedValue={tipo} onValueChange={setTipo}>
                   {Object.values(TIPOS_DOACAO).map((tipo) => (
-                    <Picker.Item key={tipo} label={tipo} value={tipo} />
+                    <Picker.Item key={tipo} label={tipo} value={tipo.toUpperCase()} />
                   ))}
                 </Picker>
               </View>
@@ -209,7 +254,7 @@ export default function TelaListaPontos({ navigation, route }: Props) {
                   onValueChange={setPontoDestino}
                 >
                   {pontos
-                    .filter((ponto) => ponto.tiposDoacao.includes(tipo))
+                    .filter((ponto) => ponto.tiposDoacao.includes(tipo.toUpperCase()))
                     .map((ponto) => (
                       <Picker.Item
                         key={ponto.id}
@@ -245,6 +290,31 @@ export default function TelaListaPontos({ navigation, route }: Props) {
                 ) : null}
                 {erro ? <Text style={styles.textErro}>{erro}</Text> : null}
               </View>
+
+              <Text style={styles.title}>Pontos de coleta</Text>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Buscar ponto de coleta"
+                value={buscaPonto}
+                onChangeText={setBuscaPonto}
+              />
+            </View>
+          }
+          ListEmptyComponent={
+            <View style={styles.container}>
+              {carregando ? (
+                <ActivityIndicator size="large" color="#b4dd1e"/>
+              ) :buscaPonto ? (
+                <Text style={styles.textErro}>
+                  Nenhum ponto de coleta encontrado para o tipo de doação
+                  selecionado.
+                </Text>
+              ) : (
+                <Text style={styles.textErro}>
+                  Nenhum ponto de coleta encontrado, o servidor provavelmente se
+                  encontra offline.
+                </Text>
+              )}
             </View>
           }
         />

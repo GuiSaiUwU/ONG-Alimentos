@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import { ItemDoacao, TIPOS_DOACAO } from "../types";
 import { listarDoacoes } from "../dados/doacoesStorage";
 import {
