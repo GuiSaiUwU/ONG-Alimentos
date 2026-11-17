@@ -14,7 +14,8 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import { Picker } from "@react-native-picker/picker";
 import {
   atualizarDoacao,
@@ -148,7 +149,7 @@ export default function TelaListaPontos({ navigation, route }: Props) {
     }
   }, [doacaoCarregada, doacaoId, editando, pontoDestino, tipo]);
   
-  function carregarPrimeiraPagina() {
+  const carregarPrimeiraPagina = useCallback(() => {
     setCarregando(true);
     getPontos(0, buscaPonto)
       .then((resposta) => {
@@ -157,15 +158,15 @@ export default function TelaListaPontos({ navigation, route }: Props) {
         setEhUltimaPagina(ultimaPagina(resposta));
       })
       .catch((erro) => {
-        setErro("Erro ao carregar pontos: " + erro.message);
+        setErro("Erro ao carregar pontos: " + mensagemDeErro(erro));
       }).finally(() => {
         setCarregando(false);
       });
-  }
-
-  useEffect(() => {
-    carregarPrimeiraPagina();
   }, [buscaPonto]);
+
+  useFocusEffect(useCallback(() => {
+    carregarPrimeiraPagina();
+  }, [carregarPrimeiraPagina]));
 
   async function carregarMaisPontos() {
     if (buscandoMais.current || ehUltimaPagina || carregando) {
@@ -181,15 +182,11 @@ export default function TelaListaPontos({ navigation, route }: Props) {
       setPaginaAtual(proximaPagina);
       setEhUltimaPagina(ultimaPagina(resposta));
     } catch (error) {
-      setErro(
-        "Erro ao carregar mais pontos: " + typeof error === "object" &&
-          error instanceof Error
-          ? error.message
-          : String(error),
-      );
+      setErro("Erro ao carregar mais pontos: " + mensagemDeErro(error));
     } finally {
       buscandoMais.current = false;
     }
+
   }
 
   return (
@@ -221,6 +218,12 @@ export default function TelaListaPontos({ navigation, route }: Props) {
           )}
           ListHeaderComponent={
             <View style={styles.container}>
+              <Pressable
+                style={styles.button}
+                onPress={() => navigation.navigate("CadastrarPonto")}
+              >
+                <Text style={styles.buttonText}>Cadastrar ponto</Text>
+              </Pressable>
               <Text style={styles.title}>
                 {editando
                   ? "Edição de item de doação"
@@ -321,4 +324,8 @@ export default function TelaListaPontos({ navigation, route }: Props) {
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
+}
+
+function mensagemDeErro(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }

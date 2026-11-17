@@ -42,6 +42,34 @@ export const styles = StyleSheet.create({
     marginBottom: 8,
     minHeight: 44,
   },
+  fieldLabel: {
+    fontWeight: "600",
+    marginTop: 4,
+  },
+  optionsContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  option: {
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: "#fff",
+  },
+  optionSelected: {
+    backgroundColor: "#5c9dda",
+    borderColor: "#5c9dda",
+  },
+  optionText: {
+    color: "#222",
+  },
+  optionTextSelected: {
+    color: "#fff",
+    fontWeight: "600",
+  },
   container: {
     padding: 16,
     backgroundColor: "#fff",

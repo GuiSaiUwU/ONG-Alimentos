@@ -65,4 +65,5 @@ export type RootStackParamList = {
     TelaDetalhePonto: { pontoId: string };
     TelaMinhasDoacoes: undefined;
     TelaDetalheDoacao: { doacaoId: number };
+    CadastrarPonto: { pontoId?: string } | undefined;
 };

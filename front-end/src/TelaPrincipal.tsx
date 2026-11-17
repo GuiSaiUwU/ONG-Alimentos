@@ -5,6 +5,7 @@ import TelaListaPontos from "./telas/TelaListaPontos";
 import { RootStackParamList } from "./types";
 import MinhasDoacoes from "./telas/MinhasDoacoes";
 import DetalheDoacao from "./telas/DetalheDoacao";
+import CadastrarPonto from "./telas/CadastrarPonto";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -21,6 +22,11 @@ export default function TelaPrincipal() {
           name="TelaDetalhePonto"
           component={TelaDetalhePonto}
           options={{ title: "Detalhes do ponto" }}
+        />
+        <Stack.Screen
+          name="CadastrarPonto"
+          component={CadastrarPonto}
+          options={{ title: "Cadastrar ponto" }}
         />
         <Stack.Screen
           name="TelaMinhasDoacoes"
