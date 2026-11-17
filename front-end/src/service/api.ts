@@ -1,31 +1,39 @@
-export const SERVIDOR_URL = "http://localhost:8080";
-const API_URL = `${SERVIDOR_URL}/api/v1`
+export const SERVIDOR_URL = process.env.EXPO_PUBLIC_SERVIDOR_URL || "http://localhost:8080";
+const API_URL = `${SERVIDOR_URL}/api/v1`;
 
-export interface PaginaResponse<T> {
-    content: T[];
-    empty: boolean;
-    first: boolean;
-    last: boolean;
-    number: number;
-    numberOfElements: number;
-    pageable: object;
-    size: number;
-    sort: object;
-    totalElements: number;
-    totalPages: number;
+
+export async function requisitarPaginado<T>(
+  endpoint: string,
+  options?: RequestInit,
+): Promise<Awaited<T>> {
+  const response = await fetch(`${API_URL}${endpoint}`, {
+    ...options,
+    // Só quem manda corpo (POST e PUT) precisa avisar que o corpo é JSON.
+    headers: options?.body ? { "Content-Type": "application/json" } : undefined,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Falha no ${API_URL}${endpoint} | status: ${response.status}`);
+  }
+
+  // O DELETE responde sem corpo: nesse caso não há JSON para ler.
+  const texto = await response.text();
+  return (texto ? JSON.parse(texto) : undefined) as Awaited<T>;
 }
 
-export async function getPaginado<T>(endpoint: string): Promise<Awaited<PaginaResponse<T>>> {
-    const response = await fetch(`${API_URL}${endpoint}`, {
-        method: 'GET',
-        headers: {
-            "Content-Type": "application/json"
-        }
-    });
-    
-    if (!response.ok) {
-        throw new Error(`Falha no get ${API_URL}${endpoint} `);
-    }
+export async function get<T>(endpoint: string): Promise<T> {
+  return requisitarPaginado<T>(endpoint, { method: 'GET' });
+}
 
-    return response.json();
+export async function post<T>(endpoint: string, body: any): Promise<T> {
+  return requisitarPaginado<T>(endpoint, { method: 'POST', body: JSON.stringify(body) });
+}
+
+export async function put<T>(endpoint: string, body: any): Promise<T> {
+  return requisitarPaginado<T>(endpoint, { method: 'PUT', body: JSON.stringify(body) });
+}
+
+
+export async function del<T>(endpoint: string): Promise<T> {
+  return requisitarPaginado<T>(endpoint, { method: 'DELETE' });
 }

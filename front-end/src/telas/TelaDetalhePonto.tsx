@@ -1,10 +1,10 @@
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, Text } from "react-native";
 import { Ponto, RootStackParamList } from "../types";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { styles } from "../utils/styling";
 import { useEffect, useState } from "react";
-import { getPontos } from "../service/ponto-service";
+import { getByPontoId } from "../service/ponto-service";
 
 type Props = NativeStackScreenProps<RootStackParamList, "TelaDetalhePonto">;
 
@@ -28,10 +28,12 @@ function DetalhePonto({ ponto }: { ponto: Ponto }) {
 export default function TelaDetalhePonto({ route }: Props) {
   const { pontoId } = route.params;
   const [ponto, setPonto] = useState<Ponto | undefined>(undefined);
+
   useEffect(() => {
-    getPontos(1, "").then((response) => {
-      const pontoEncontrado = response.content.find((p) => p.id === pontoId);
-      setPonto(pontoEncontrado);
+    getByPontoId(pontoId).then((response) => {
+      if (response.nome != undefined) {
+        setPonto(response);
+      }
     });
   }, [pontoId]);
 

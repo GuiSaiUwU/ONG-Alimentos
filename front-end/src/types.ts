@@ -1,3 +1,13 @@
+export interface PaginaResponse<T> {
+  content: T[];
+  page: {
+    size: number;
+    number: number;
+    totalElements: number;
+    totalPages: number;
+  };
+}
+
 export enum TIPOS_DOACAO {
     ALIMENTOS = "Alimentos",
     ROUPAS = "Roupas",
@@ -32,6 +42,15 @@ export enum DIAS_SEMANA {
 
 export type Ponto = {
     id: string;
+    nome: string;
+    endereco: string;
+    diasQueAtende: string[];
+    tiposDoacao: string[];
+    latitude: number;
+    longitude: number;
+};
+
+export type PontoRequest = {
     nome: string;
     endereco: string;
     diasQueAtende: string[];
