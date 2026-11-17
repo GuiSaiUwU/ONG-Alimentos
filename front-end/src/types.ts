@@ -18,14 +18,20 @@ export enum TIPOS_DOACAO {
     RACOES = "Rações"
 }
 
+export type DoacaoRequest = {
+    nome: string;
+    tipoItem: TIPOS_DOACAO;
+    quantidade: number;
+    pontoDestino: string;
+}
 
 export type ItemDoacao = {
-    id: number;
-    criadoEm: Date;
+    id: string;
     nome: string;
-    tipo: TIPOS_DOACAO;
+    tipoItem: TIPOS_DOACAO;
     quantidade: number;
     pontoDestino: Ponto;
+    criadoEm: Date;
 }
 
 
