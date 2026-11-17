@@ -1,6 +1,6 @@
 import { SafeAreaView } from "react-native-safe-area-context";
 import { styles } from "../utils/styling";
-import { deletarDoacao, listarDoacoes } from "../dados/doacoesStorage";
+import { deleteDoacao, getDoacaoById } from "../service/doacoes-service";
 import { useCallback, useState } from "react";
 import { ItemDoacao, RootStackParamList } from "../types";
 import { Alert, Pressable, Text, View } from "react-native";
@@ -18,21 +18,21 @@ function DetalheItemDoacao({ itemDoacao }: { itemDoacao: ItemDoacao }) {
   return (
     <View style={styles.pontoItem}>
       <Text style={styles.pontoNome}>{itemDoacao.nome}</Text>
-      <Text style={styles.pontoEndereco}>Tipo: {itemDoacao.tipo}</Text>
+      <Text style={styles.pontoEndereco}>Tipo: {itemDoacao.tipoItem}</Text>
       <Text style={styles.pontoEndereco}>
         Quantidade: {itemDoacao.quantidade}
       </Text>
       <Text style={styles.pontoEndereco}>
-        Data: {format(itemDoacao.criadoEm, "dd/MM/yyyy HH:mm")}
+        Data: {format(new Date(itemDoacao.criadoEm), "dd/MM/yyyy HH:mm")}
       </Text>
       <Text style={styles.pontoEndereco}>
-        Ponto de Destino: {itemDoacao.pontoDestino.nome}
+        Ponto de Destino: {itemDoacao.pontoDestino}
       </Text>
     </View>
   );
 }
 
-function BotaoDeletar({ doacaoId }: { doacaoId: number }) {
+function BotaoDeletar({ doacaoId }: { doacaoId: string }) {
   const navigation = useNavigation<NavigationProp<any>>();
 
   return (
@@ -48,7 +48,7 @@ function BotaoDeletar({ doacaoId }: { doacaoId: number }) {
             text: "Confirmar",
             onPress: async () => {
               try {
-                await deletarDoacao(doacaoId);
+                await deleteDoacao(doacaoId);
                 navigation.goBack();
               } catch (error) {
                 console.error("Erro ao deletar: ", error);
@@ -63,7 +63,7 @@ function BotaoDeletar({ doacaoId }: { doacaoId: number }) {
   );
 }
 
-function BotaoEditar({ doacaoId }: { doacaoId: number }) {
+function BotaoEditar({ doacaoId }: { doacaoId: string }) {
   const navigation = useNavigation<NavigationProp<any>>();
 
   return (
@@ -82,15 +82,8 @@ export default function DetalheDoacao({ route }: Props) {
 
   useFocusEffect(
     useCallback(() => {
-      listarDoacoes()
-        .then((doacoes) => {
-          const doacaoEncontrada = doacoes.find((item) => item.id === doacaoId);
-          if (!doacaoEncontrada) {
-            console.error("Doação não encontrada");
-            return;
-          }
-          setDoacao(doacaoEncontrada);
-        })
+      getDoacaoById(doacaoId)
+        .then(setDoacao)
         .catch((error) => console.error("Erro ao carregar doação:", error));
     }, [doacaoId]),
   );

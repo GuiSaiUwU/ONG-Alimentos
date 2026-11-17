@@ -1,7 +1,8 @@
-import { memo, useCallback, useMemo, useState } from "react";
-import { ItemDoacao, TIPOS_DOACAO } from "../types";
-import { listarDoacoes } from "../dados/doacoesStorage";
+import { memo, useCallback, useRef, useState } from "react";
+import { ItemDoacao } from "../types";
+import { getDoacoes, ultimaPaginaDoacoes } from "../service/doacoes-service";
 import {
+  ActivityIndicator,
   FlatList,
   KeyboardAvoidingView,
   Platform,
@@ -31,12 +32,12 @@ const PontoMemo = memo(function PontoMemo({
       style={styles.pontoItem}
     >
       <Text style={styles.pontoNome}>{itemDoacao.nome}</Text>
-      <Text style={styles.pontoEndereco}>Tipo: {itemDoacao.tipo}</Text>
+      <Text style={styles.pontoEndereco}>Tipo: {itemDoacao.tipoItem}</Text>
       <Text style={styles.pontoEndereco}>
         Quantidade: {itemDoacao.quantidade}
       </Text>
       <Text style={styles.pontoEndereco}>
-        Ponto de Destino: {itemDoacao.pontoDestino.nome}
+        Ponto de Destino: {itemDoacao.pontoDestino}
       </Text>
     </Pressable>
   );
@@ -45,48 +46,44 @@ const PontoMemo = memo(function PontoMemo({
 export default function MinhasDoacoes() {
   const [doacoes, setDoacoes] = useState<ItemDoacao[]>([]);
   const [textoBusca, setTextoBusca] = useState("");
+  const [paginaAtual, setPaginaAtual] = useState(0);
+  const [ultimaPagina, setUltimaPagina] = useState(false);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState("");
+  const buscandoMais = useRef(false);
   const insets = useSafeAreaInsets();
 
   useFocusEffect(
     useCallback(() => {
-      listarDoacoes().then(setDoacoes);
-    }, []),
+      setCarregando(true);
+      setErro("");
+      getDoacoes(0, textoBusca)
+        .then((pagina) => {
+          setDoacoes(pagina.content);
+          setPaginaAtual(0);
+          setUltimaPagina(ultimaPaginaDoacoes(pagina));
+        })
+        .catch((error: unknown) =>
+          setErro(`Erro ao carregar doações: ${mensagemDeErro(error)}`),
+        )
+        .finally(() => setCarregando(false));
+    }, [textoBusca]),
   );
 
-  const resumoDoacoes = useMemo(() => {
-    const porTipo = doacoes.reduce<
-      Record<string, { quantidade: number; doacoes: number }>
-    >((resumo, doacao) => {
-      const tipoAtual = resumo[doacao.tipo] ?? { quantidade: 0, doacoes: 0 };
-
-      resumo[doacao.tipo] = {
-        quantidade: tipoAtual.quantidade + doacao.quantidade,
-        doacoes: tipoAtual.doacoes + 1,
-      };
-
-      return resumo;
-    }, {});
-
-    Object.entries(TIPOS_DOACAO).forEach(([tipo, descricao]) => {
-      if (!porTipo[descricao]) {
-        porTipo[descricao] = { quantidade: 0, doacoes: 0 };
-      }
-    });
-
-    return Object.entries(porTipo);
-  }, [doacoes]);
-
-  const doacoesFiltradas = useMemo(() => {
-    const busca = textoBusca.toLocaleLowerCase();
-
-    if (!busca) {
-      return doacoes;
+  async function carregarMais() {
+    if (buscandoMais.current || ultimaPagina || carregando) return;
+    buscandoMais.current = true;
+    try {
+      const pagina = await getDoacoes(paginaAtual + 1, textoBusca);
+      setDoacoes((atuais) => [...atuais, ...pagina.content]);
+      setPaginaAtual((atual) => atual + 1);
+      setUltimaPagina(ultimaPaginaDoacoes(pagina));
+    } catch (error) {
+      setErro(`Erro ao carregar mais doações: ${mensagemDeErro(error)}`);
+    } finally {
+      buscandoMais.current = false;
     }
-
-    return doacoes.filter((doacao) =>
-      doacao.tipo.toLocaleLowerCase().includes(busca),
-    );
-  }, [doacoes, textoBusca]);
+  }
 
   return (
     <SafeAreaView style={{ flex: 1 }} edges={["bottom", "left", "right"]}>
@@ -105,35 +102,13 @@ export default function MinhasDoacoes() {
               paddingTop: insets.top / 2,
             },
           ]}
-          data={doacoesFiltradas}
+          data={doacoes}
+          onEndReached={carregarMais}
+          onEndReachedThreshold={0.8}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => <PontoMemo itemDoacao={item} />}
           ListHeaderComponent={
             <>
-              <Text style={styles.pontoNome}>
-                Resumo: {doacoes.length} doações realizadas
-              </Text>
-              <FlatList
-                data={resumoDoacoes}
-                keyExtractor={([tipo]) => tipo}
-                renderItem={({ item: [tipo, resumo] }) => (
-                  <Text style={styles.pontoEndereco}>
-                    {resumo.doacoes === 0 ? (
-                      `Nenhuma doação de ${tipo} cadastrada`
-                    ) : (
-                      <>
-                        {tipo}: {resumo.quantidade} unidades em {resumo.doacoes}{" "}
-                        {resumo.doacoes === 1 ? "doação" : "doações"}{" "}
-                      </>
-                    )}
-                  </Text>
-                )}
-                ListEmptyComponent={
-                  <Text style={styles.pontoNome}>
-                    Ainda não há doações para resumir.
-                  </Text>
-                }
-              />
               <TextInput
                 style={[styles.textInput, { marginTop: 16 }]}
                 placeholder="Buscar por tipo de item"
@@ -142,17 +117,26 @@ export default function MinhasDoacoes() {
                 autoCorrect={false}
                 returnKeyType="done"
               />
+              {erro ? <Text style={styles.textErro}>{erro}</Text> : null}
             </>
           }
           ListEmptyComponent={
-            doacoes.length === 0 ? (
+            carregando ? (
+              <ActivityIndicator size="large" color="#b4dd1e" />
+            ) : erro ? (
+              <Text>{erro}</Text>
+            ) : doacoes.length === 0 ? (
               <Text>Você ainda não fez nenhuma doação.</Text>
             ) : (
-              <Text>Nenhuma doação encontrada para "{textoBusca}".</Text>
+              <Text>Nenhuma doação encontrada.</Text>
             )
           }
         />
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
+}
+
+function mensagemDeErro(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }
