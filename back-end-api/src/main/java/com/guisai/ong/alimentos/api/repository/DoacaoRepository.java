@@ -14,6 +14,7 @@ public interface DoacaoRepository extends JpaRepository<Doacao, UUID> {
         SELECT d
         FROM Doacao d
         WHERE UPPER(d.tipoItem) LIKE CONCAT('%', UPPER(:filtro), '%')
+        OR UPPER(d.nome) LIKE CONCAT('%', UPPER(:filtro), '%')
         """)
     Page<Doacao> findByFiltro(String filtro, Pageable pageable);
 }
