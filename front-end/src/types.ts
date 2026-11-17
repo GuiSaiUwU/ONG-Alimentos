@@ -30,8 +30,8 @@ export type ItemDoacao = {
     nome: string;
     tipoItem: TIPOS_DOACAO;
     quantidade: number;
-    pontoDestino: Ponto;
-    criadoEm: Date;
+    pontoDestino: string;
+    criadoEm: string;
 }
 
 
@@ -70,7 +70,7 @@ export type RootStackParamList = {
     TelaListaPontos: undefined;
     TelaDetalhePonto: { pontoId: string };
     TelaMinhasDoacoes: undefined;
-    TelaDetalheDoacao: { doacaoId: number };
+    TelaDetalheDoacao: { doacaoId: string };
     CadastrarPonto: { pontoId?: string } | undefined;
-    CadastrarDoacao: { doacaoId?: number } | undefined;
+    CadastrarDoacao: { doacaoId?: string } | undefined;
 };
